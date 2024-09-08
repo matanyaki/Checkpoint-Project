@@ -4,33 +4,36 @@
 #include "Database.h"
 
 // Initialize the hash table with NULL values
-Student* hashTable[HASH_TABLE_SIZE] = {NULL};
+Student *hashTable[HASH_TABLE_SIZE] = {NULL};
 
-// Hash function to calculate index for student name
-unsigned int hash(const char* str) {
+// Hash function to calculate index for first and last name
+unsigned int hash(const char *first_name, const char *last_name) {
     unsigned int hash = 0;
-    while (*str)
-        hash = (hash << 5) + *str++;
+    while (*first_name)
+        hash = (hash << 5) + *first_name++;
+    while (*last_name)
+        hash = (hash << 5) + *last_name++;
     return hash % HASH_TABLE_SIZE;
 }
 
 // Add a new student
-void add_student(const char* name) {
-    unsigned int index = hash(name);
-    Student* new_student = (Student*)malloc(sizeof(Student));
-    strcpy(new_student->name, name);
-    for (int i = 0; i < MAX_SUBJECTS; i++) new_student->grades[i] = -1;  // Initialize with no grades
+void add_student(const char *first_name, const char *last_name) {
+    unsigned int index = hash(first_name, last_name);
+    Student *new_student = (Student *)malloc(sizeof(Student));
+    strcpy(new_student->first_name, first_name);
+    strcpy(new_student->last_name, last_name);
+    for (int i = 0; i < MAX_SUBJECTS; i++) new_student->grades[i] = -1;  // Initialize grades with -1 (no grades yet)
     new_student->next = hashTable[index];
     hashTable[index] = new_student;
 }
 
 // Remove a student
-void remove_student(const char* name) {
-    unsigned int index = hash(name);
-    Student* student = hashTable[index];
-    Student* prev = NULL;
+void remove_student(const char *first_name, const char *last_name) {
+    unsigned int index = hash(first_name, last_name);
+    Student *student = hashTable[index];
+    Student *prev = NULL;
 
-    while (student != NULL && strcmp(student->name, name) != 0) {
+    while (student != NULL && (strcmp(student->first_name, first_name) != 0 || strcmp(student->last_name, last_name) != 0)) {
         prev = student;
         student = student->next;
     }
@@ -50,11 +53,11 @@ void remove_student(const char* name) {
 }
 
 // Update a student's grade
-void update_grade(const char* name, int subject_id, int grade) {
-    unsigned int index = hash(name);
-    Student* student = hashTable[index];
+void update_grade(const char *first_name, const char *last_name, int subject_id, int grade) {
+    unsigned int index = hash(first_name, last_name);
+    Student *student = hashTable[index];
 
-    while (student != NULL && strcmp(student->name, name) != 0) {
+    while (student != NULL && (strcmp(student->first_name, first_name) != 0 || strcmp(student->last_name, last_name) != 0)) {
         student = student->next;
     }
 
@@ -67,11 +70,11 @@ void update_grade(const char* name, int subject_id, int grade) {
 }
 
 // Print details of a student
-void print_student(const char* name) {
-    unsigned int index = hash(name);
-    Student* student = hashTable[index];
+void print_student(const char *first_name, const char *last_name) {
+    unsigned int index = hash(first_name, last_name);
+    Student *student = hashTable[index];
 
-    while (student != NULL && strcmp(student->name, name) != 0) {
+    while (student != NULL && (strcmp(student->first_name, first_name) != 0 || strcmp(student->last_name, last_name) != 0)) {
         student = student->next;
     }
 
@@ -80,7 +83,9 @@ void print_student(const char* name) {
         return;
     }
 
-    printf("Student: %s\n", student->name);
+    printf("Student: %s %s\n", student->first_name, student->last_name);
+    printf("Telephone: %s\n", student->telephone);
+    printf("Layer: %d, Class: %d\n", student->layer, student->class_id);
     for (int i = 0; i < MAX_SUBJECTS; i++) {
         if (student->grades[i] != -1) {
             printf("Subject %d: %d\n", i, student->grades[i]);
@@ -88,24 +93,33 @@ void print_student(const char* name) {
     }
 }
 
+
 // Find top 10 students in a subject
+
 void find_top_students(int subject_id) {
     Student* student;
     int top_students[10] = {0};
-    char top_names[10][50] = {0};
+    char top_names[10][100] = {0};  // Updated to store full names (first + last)
 
     for (int i = 0; i < HASH_TABLE_SIZE; i++) {
         student = hashTable[i];
         while (student != NULL) {
             if (student->grades[subject_id] != -1) {
+                // Build the full name from first_name and last_name
+                char full_name[100];
+                snprintf(full_name, sizeof(full_name), "%s %s", student->first_name, student->last_name);
+
+                // Insert the student into the top 10 if they qualify
                 for (int j = 0; j < 10; j++) {
                     if (student->grades[subject_id] > top_students[j]) {
+                        // Shift the other entries down
                         for (int k = 9; k > j; k--) {
                             top_students[k] = top_students[k - 1];
                             strcpy(top_names[k], top_names[k - 1]);
                         }
+                        // Insert the new top student
                         top_students[j] = student->grades[subject_id];
-                        strcpy(top_names[j], student->name);
+                        strcpy(top_names[j], full_name);
                         break;
                     }
                 }
@@ -114,6 +128,7 @@ void find_top_students(int subject_id) {
         }
     }
 
+    // Print the top 10 students
     printf("Top 10 students in subject %d:\n", subject_id);
     for (int i = 0; i < 10; i++) {
         if (top_students[i] != 0) {
