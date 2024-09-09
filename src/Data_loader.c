@@ -18,7 +18,7 @@ void load_data_from_file(const char *filename) {
     while (fgets(line, sizeof(line), file)) {
         // Variables to store parsed data
         char first_name[50], last_name[50], telephone[PHONE_NUM_LENGTH];
-        int layer, class_id, grades[10];
+        int layer, class_id, grades[MAX_SUBJECTS];
 
         // Parse the line into the respective fields
         int parsed = sscanf(line, "%s %s %s %d %d %d %d %d %d %d %d %d %d %d %d",
@@ -28,18 +28,8 @@ void load_data_from_file(const char *filename) {
 
         // Check if the line was parsed correctly (15 items)
         if (parsed == 15) {
-            // Insert the student data into the database
-            add_student(first_name, last_name);
-
-            // Update other information
-            unsigned int index = hash(first_name, last_name);
-            Student *student = hashTable[index];
-            student->layer = layer;      // Store the layer
-            student->class_id = class_id;   // Store the class
-            strcpy(student->telephone, telephone);  // Store the telephone number
-            for (int i = 0; i < 10; i++) {
-                student->grades[i] = grades[i];  // Store grades in the grades array
-            }
+            // Insert the student data into the database using the new add_student function
+            add_student(first_name, last_name, telephone, layer, class_id, grades);
         } else {
             fprintf(stderr, "Failed to parse line: %s", line);
         }

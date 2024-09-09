@@ -17,16 +17,113 @@ unsigned int hash(const char *first_name, const char *last_name) {
 }
 
 // Add a new student
-void add_student(const char *first_name, const char *last_name) {
+void add_student(const char *first_name, const char *last_name, const char *telephone, int layer, int class_id, int grades[MAX_SUBJECTS])
+{
     unsigned int index = hash(first_name, last_name);
+
+    // Create a new student and allocate memory
     Student *new_student = (Student *)malloc(sizeof(Student));
-    strcpy(new_student->first_name, first_name);
-    strcpy(new_student->last_name, last_name);
-    for (int i = 0; i < MAX_SUBJECTS; i++) new_student->grades[i] = -1;  // Initialize grades with -1 (no grades yet)
+    if (new_student == NULL) {
+        // Handle memory allocation failure (no print but can log if needed)
+        return;
+    }
+
+    // Assign first and last name
+    strncpy(new_student->first_name, first_name, sizeof(new_student->first_name) - 1);
+    new_student->first_name[sizeof(new_student->first_name) - 1] = '\0'; // Ensure null termination
+
+    strncpy(new_student->last_name, last_name, sizeof(new_student->last_name) - 1);
+    new_student->last_name[sizeof(new_student->last_name) - 1] = '\0'; // Ensure null termination
+
+    // Assign telephone, layer, and class_id
+    strncpy(new_student->telephone, telephone, sizeof(new_student->telephone) - 1);
+    new_student->telephone[sizeof(new_student->telephone) - 1] = '\0'; // Ensure null termination
+    new_student->layer = layer;
+    new_student->class_id = class_id;
+
+    // Assign grades
+    for (int i = 0; i < MAX_SUBJECTS; i++) {
+        new_student->grades[i] = grades[i]; // Assign each grade directly
+    }
+
+    // Insert the new student at the head of the list for the hash index
     new_student->next = hashTable[index];
     hashTable[index] = new_student;
 }
 
+Student* get_student(const char *first_name, const char *last_name) {
+    unsigned int index = hash(first_name, last_name);
+    Student *student = hashTable[index];
+
+    // Traverse the linked list at the hash index to find the student
+    while (student != NULL) {
+        if (strcmp(student->first_name, first_name) == 0 && strcmp(student->last_name, last_name) == 0) {
+            return student; // Student found
+        }
+        student = student->next;
+    }
+    return NULL; // Student not found
+}
+
+int set_student(const char *old_first_name, const char *old_last_name, const char *new_first_name, const char *new_last_name, const char *telephone, int layer, int class_id, int grades[MAX_SUBJECTS]) {
+    Student *student = get_student(old_first_name, old_last_name);
+
+    if (student == NULL) {
+        return -1; // Student not found
+    }
+
+    // If the name is changing, remove the student from the hash table
+    if ((new_first_name != NULL && strcmp(old_first_name, new_first_name) != 0) || 
+        (new_last_name != NULL && strcmp(old_last_name, new_last_name) != 0)) {
+        // Remove the student from the old hash location
+        remove_student(old_first_name, old_last_name);
+    }
+
+    // Update the first name if provided
+    if (new_first_name != NULL && strlen(new_first_name) > 0) {
+        strncpy(student->first_name, new_first_name, sizeof(student->first_name) - 1);
+        student->first_name[sizeof(student->first_name) - 1] = '\0'; // Ensure null termination
+    }
+
+    // Update the last name if provided
+    if (new_last_name != NULL && strlen(new_last_name) > 0) {
+        strncpy(student->last_name, new_last_name, sizeof(student->last_name) - 1);
+        student->last_name[sizeof(student->last_name) - 1] = '\0'; // Ensure null termination
+    }
+
+    // Update the telephone field if provided
+    if (telephone != NULL && strlen(telephone) > 0) {
+        strncpy(student->telephone, telephone, sizeof(student->telephone) - 1);
+        student->telephone[sizeof(student->telephone) - 1] = '\0'; // Ensure null termination
+    }
+
+    // Update layer and class_id if not -1
+    if (layer != -1) {
+        student->layer = layer;
+    }
+    if (class_id != -1) {
+        student->class_id = class_id;
+    }
+
+    // Update grades if not -1
+    if (grades != NULL) {
+        for (int i = 0; i < MAX_SUBJECTS; i++) {
+            if (grades[i] != -1) {
+                student->grades[i] = grades[i]; // Update only the valid grades
+            }
+        }
+    }
+
+    // Re-add the student to the new location in the hash table if the name was changed
+    if ((new_first_name != NULL && strcmp(old_first_name, new_first_name) != 0) || 
+        (new_last_name != NULL && strcmp(old_last_name, new_last_name) != 0)) {
+        unsigned int new_index = hash(student->first_name, student->last_name);
+        student->next = hashTable[new_index];
+        hashTable[new_index] = student;
+    }
+
+    return 0; // Update successful
+}
 // Remove a student
 void remove_student(const char *first_name, const char *last_name) {
     unsigned int index = hash(first_name, last_name);
@@ -138,7 +235,7 @@ void find_top_students(int subject_id) {
 }
 
 // Calculate average grade for a subject
-void calculate_average(int subject_id) {
+void calculate_average(int subject_id) { //TODO change to take in layer as well
     Student* student;
     int sum = 0, count = 0;
 
