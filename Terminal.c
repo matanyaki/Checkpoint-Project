@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include "Database.h"
 
 #define MAX_NAME_LENGTH 50
 #define MAX_GRADES 10
@@ -19,20 +20,11 @@
 //Const For Edit Menu
 #define EDIT_FIRST_NAME 1
 #define EDIT_LAST_NAME 2
-#define EDIT_STUDENT_ID 3
+#define EDIT_STUDENT_TELEPHONE 3
 #define EDIT_CLASS_NUMBER 4
 #define EDIT_LAYER_NUMBER 5
 #define EDIT_GRADES 6
 #define MAIN_MENU 7
-
-typedef struct {
-    char firstName[MAX_NAME_LENGTH];
-    char lastName[MAX_NAME_LENGTH];
-    int studentID;
-    int layerNumber;
-    int classNumber;
-    float grades[MAX_GRADES];
-} Student;
 
 void clearInputBuffer() {
     while (getchar() != '\n');
@@ -55,11 +47,10 @@ char getValidChar() {
     clearInputBuffer(); // Clear any remaining input
     return input;
 }
-int getValidStudentID() {
-    char input[12]; // Buffer for 10 digits plus newline and null terminator
-    int studentID;
+char* getValidTelephone() {
+    static char input[12]; // Buffer for 10 digits plus newline and null terminator
     while (1) {
-        printf("Enter Student ID (10 digits): ");
+        printf("Enter Telephone Number (10 digits): ");
         fgets(input, sizeof(input), stdin); // Read input including newline
 
         // Remove newline character from input if present
@@ -67,18 +58,16 @@ int getValidStudentID() {
 
         // Check if the length is exactly 10 characters and all are digits
         if (strlen(input) == 10 && strspn(input, "0123456789") == 10) {
-            if (sscanf(input, "%d", &studentID) == 1) {
-                return studentID; // Return the valid student ID
-            }
+            return input; // Return the valid telephone number
         }
-        printf("Invalid input. Student ID must be exactly 10 digits.\n");
+        printf("Invalid input. Telephone number must be exactly 10 digits.\n");
     }
 }
-float getValidGrade(int courseNumber) {
-    float grade;
+int getValidGrade(int courseNumber) {
+    int grade;
     while (1) {
         printf("Enter Grade for Course %d (0-100): ", courseNumber);
-        if (scanf("%f", &grade) == 1 && grade >= 0 && grade <= 100) {
+        if (scanf("%d", &grade) == 1 && grade >= 0 && grade <= 100) {
             return grade; // Valid grade, return it
         } else {
             printf("Invalid input. Grade must be a number between 0 and 100.\n");
@@ -90,7 +79,7 @@ float getValidGrade(int courseNumber) {
 //User Display Menus
 void displayMenu()
 {
-    printf("School Management System Menu:\n");
+    printf("\nSchool Management System Menu:\n");
     printf("1. Add a New Student - Assign to Class and Layer, Enroll in Courses\n");
     printf("2. Remove a Student\n");
     printf("3. Edit Student Information (e.g., Update Grades)\n");
@@ -119,24 +108,20 @@ void insertStudent()
 {
     char firstName[MAX_NAME_LENGTH];
     char lastName[MAX_NAME_LENGTH];
-    int studentID;
-    int studentClass;
-    int studentLayer;
-    float grades[MAX_GRADES];
+    char* telephone;
+    int studentClass = -1;
+    int studentLayer = -1;
+    int grades[MAX_GRADES] ={0};
 
     // Take required arguments from user
     printf("Enter First Name (max %d characters): ", MAX_NAME_LENGTH - 1);
     scanf("%s" , firstName);
-//    fgets(firstName, MAX_NAME_LENGTH, stdin);
-//    firstName[strcspn(firstName, "\n")] = '\0';
 
     printf("Enter Last Name (max %d characters): ", MAX_NAME_LENGTH - 1);
     scanf("%s" , lastName);
-//    fgets(lastName, MAX_NAME_LENGTH, stdin);
-//    lastName[strcspn(lastName, "\n")] = '\0';
 
     clearInputBuffer();
-    studentID = getValidStudentID();
+    telephone = getValidTelephone();
 
     printf("Enter Class Number: ");
     studentClass = getValidInteger();
@@ -156,10 +141,10 @@ void insertStudent()
     } else {
         // Initialize grades to 0 if not provided
         for (int i = 0; i < MAX_GRADES; i++) {
-            grades[i] = 0.0;
+            grades[i] = 0;
         }
     }
-
+    add_student(firstName , lastName , telephone , studentLayer , studentClass , grades);
 }
 
 void removeStudent()
@@ -167,19 +152,14 @@ void removeStudent()
     char firstName[MAX_NAME_LENGTH];
     char lastName[MAX_NAME_LENGTH];
 
-    // Clear the input buffer to remove any leftover newline character
-
-
     // Input student first and last name to identify
     printf("Enter First Name of the Student to Remove: ");
     scanf("%s" , firstName);
-//    fgets(firstName, sizeof(firstName), stdin);
-//    firstName[strcspn(firstName, "\n")] = '\0'; // Remove the newline character
 
     printf("Enter Last Name of the Student to Remove: ");
     scanf("%s" , lastName);
-//    fgets(lastName, sizeof(lastName), stdin);
-//    lastName[strcspn(lastName, "\n")] = '\0';
+
+    remove_student(firstName , lastName);
 }
 
 void editStudent()
@@ -187,66 +167,67 @@ void editStudent()
     char firstName[MAX_NAME_LENGTH];
     char lastName[MAX_NAME_LENGTH];
     char newFirstName[MAX_NAME_LENGTH], newLastName[MAX_NAME_LENGTH];
-    int newStudentID;
+    char* newTelephone;
     int newClassNumber, newLayerNumber;
-    float newGrades[MAX_GRADES];
+    int newGrades[MAX_GRADES];
     int userInput;
-
-//    clearInputBuffer();
 
     // Input student first and last name to identify
     printf("Enter First Name of the Student to Edit: ");
     scanf("%s" , firstName);
-//    fgets(firstName, sizeof(firstName), stdin);
-//    firstName[strcspn(firstName, "\n")] = '\0'; // Remove newline character
 
     printf("Enter Last Name of the Student to Edit: ");
     scanf("%s" , lastName);
-//    fgets(lastName, sizeof(lastName), stdin);
-//    lastName[strcspn(lastName, "\n")] = '\0';
 
-    displayEditingMenu();
-    clearInputBuffer();
-    userInput = getValidInteger();
+    int continueEditing = 1;
+    while (continueEditing) {
+        displayEditingMenu();
+        userInput = getValidInteger();
 
-    switch (userInput) {
-        case EDIT_FIRST_NAME:
-            printf("Enter new first name: ");
-            scanf("%s" , newFirstName);
-            clearInputBuffer();
-//            fgets(newFirstName, MAX_NAME_LENGTH, stdin);
-//            newFirstName[strcspn(newFirstName, "\n")] = '\0';
-            break;
-        case EDIT_LAST_NAME:
-            printf("Enter new last name: ");
-            scanf("%s" , newLastName);
-            clearInputBuffer();
-//            fgets(newLastName, MAX_NAME_LENGTH, stdin);
-//            newLastName[strcspn(newLastName, "\n")] = '\0';
-            break;
-        case EDIT_STUDENT_ID:
-            newStudentID = getValidStudentID();
-            break;
-        case EDIT_CLASS_NUMBER:
-            printf("Enter New Class Number: ");
-            newClassNumber = getValidInteger();
-            break;
-        case EDIT_LAYER_NUMBER:
-            printf("Enter New Layer Number: ");
-            newLayerNumber = getValidInteger();
-            break;
-        case EDIT_GRADES:
-            for (int j = 0; j < 5; j++) {
-                newGrades[j] = getValidGrade(j + 1);
-            }
-            break;
-        case MAIN_MENU:
-            printf("Returning to Main Menu...\n");
-            return; // Exit the editing menu
-        default:
-            printf("Invalid choice. Please select an option between 1 and 6.\n");
-            break;
+        switch (userInput) {
+            case EDIT_FIRST_NAME:
+                printf("Enter new first name: ");
+                scanf("%s", newFirstName);
+                clearInputBuffer();
+                break;
+            case EDIT_LAST_NAME:
+                printf("Enter new last name: ");
+                scanf("%s", newLastName);
+                clearInputBuffer();
+                break;
+            case EDIT_STUDENT_TELEPHONE:
+                newTelephone = getValidTelephone();
+                break;
+            case EDIT_CLASS_NUMBER:
+                printf("Enter New Class Number: ");
+                newClassNumber = getValidInteger();
+                break;
+            case EDIT_LAYER_NUMBER:
+                printf("Enter New Layer Number: ");
+                newLayerNumber = getValidInteger();
+                break;
+            case EDIT_GRADES:
+                for (int j = 0; j < MAX_GRADES; j++) {
+                    newGrades[j] = getValidGrade(j + 1);
+                }
+                break;
+            case MAIN_MENU:
+                printf("Returning to Main Menu...\n");
+                return; // Exit the editing menu
+            default:
+                printf("Invalid choice. Please select an option between 1 and 6.\n");
+                break;
+        }
+
+        printf("Do you want to continue editing? (y/n): ");
+        char continueChoice = getValidChar();
+
+        if (continueChoice != 'y') {
+            continueEditing = 0; // Exit the loop if user chooses not to continue
+        }
     }
+
+    printf("Exiting editing mode...\n");
 }
 
 void searchStudent()
@@ -254,18 +235,14 @@ void searchStudent()
     char firstName[MAX_NAME_LENGTH];
     char lastName[MAX_NAME_LENGTH];
 
-    //clearInputBuffer();
-
     // Input student first and last name to identify
     printf("Enter First Name of the Student to Search: ");
     scanf("%s" , firstName);
-//    fgets(firstName, sizeof(firstName), stdin);
-//    firstName[strcspn(firstName, "\n")] = '\0'; // Remove newline character
 
     printf("Enter Last Name of the Student to Search: ");
     scanf("%s" , lastName);
-//    fgets(lastName, sizeof(lastName), stdin);
-//    lastName[strcspn(lastName, "\n")] = '\0';
+
+    print_student(firstName , lastName);
 }
 
 void topTenStudent()
@@ -273,6 +250,7 @@ void topTenStudent()
     int course;
     printf("Enter course No. : ");
     course = getValidInteger();
+    find_top_students(course);
 }
 
 void averagePerCourse()
@@ -285,56 +263,59 @@ void averagePerCourse()
     }
     clearInputBuffer();
 }
+void export()
+{
+    const char* fileName;
+    printf("Enter file Path to Export: ");
+    scanf("%s" , fileName);
+
+}
 
 int main() {
+    const char* fileName = "C:/Users/Asus/CLionProjects/CheckPointProject/checkpoint-team-1-at-heart-16/students_with_class.txt";
+    load_data_from_file(fileName);
+
     int userInput;
 
-    while (1) { // Loop until the user chooses to exit
+    while (1) {
         displayMenu();
-        userInput = getValidInteger(); // Get user input
-        // Handle the user's choice
+        userInput = getValidInteger();
+  
         switch (userInput) {
             case Insert:
                 printf("Option 1 selected: Add a New Student.\n");
                 insertStudent();
-                // Add functionality for adding a new student
                 break;
             case Delete:
                 printf("Option 2 selected: Remove a Student.\n");
                 removeStudent();
-                // Add functionality for removing a student
                 break;
             case Edit:
                 printf("Option 3 selected: Edit Student Information.\n");
                 editStudent();
-                // Add functionality for editing student information
                 break;
             case Search:
                 printf("Option 4 selected: Search for Student.\n");
                 searchStudent();
-                // Add functionality for searching for a student
                 break;
             case Top10:
                 printf("Option 5 selected: Query Top 10 Outstanding Students.\n");
                 topTenStudent();
-                // Add functionality for querying top 10 students
                 break;
             case UnderperformedStudents:
                 printf("Option 6 selected: List Students Eligible for Departure.\n");
-                // Add functionality for listing students eligible for departure
                 break;
             case Average:
                 printf("Option 7 selected: Calculate Average Grade per Course per Layer.\n");
                 averagePerCourse();
-                // Add functionality for calculating average grade
                 break;
             case Export:
                 printf("Option 8 selected: Export Entire Database to File.\n");
-                // Add functionality for exporting the database
+                export();
                 break;
             case Exit:
                 printf("Exiting the program. Goodbye!\n");
-                return 0; // Exit the program
+                return 0;
             default:
                 printf("Invalid choice. Please select an option between 1 and 9.\n");
                 break;
