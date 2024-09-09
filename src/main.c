@@ -25,5 +25,6 @@ int main() {
     printf("Printing the first 5 students:\n");
     print_first_five_students();
     
+    export_data_to_file("newdbfile.txt");
     return 0;
 }

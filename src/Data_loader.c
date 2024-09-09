@@ -18,7 +18,7 @@ void load_data_from_file(const char *filename) {
     while (fgets(line, sizeof(line), file)) {
         // Variables to store parsed data
         char first_name[50], last_name[50], telephone[PHONE_NUM_LENGTH];
-        int layer, class_id, grades[10];
+        int layer, class_id, grades[MAX_SUBJECTS];
 
         // Parse the line into the respective fields
         int parsed = sscanf(line, "%s %s %s %d %d %d %d %d %d %d %d %d %d %d %d",
@@ -28,20 +28,39 @@ void load_data_from_file(const char *filename) {
 
         // Check if the line was parsed correctly (15 items)
         if (parsed == 15) {
-            // Insert the student data into the database
-            add_student(first_name, last_name , telephone , layer ,class_id , grades);
+            // Insert the student data into the database using the new add_student function
+            add_student(first_name, last_name, telephone, layer, class_id, grades);
 
-            // Update other information
-            unsigned int index = hash(first_name, last_name);
-            Student *student = hashTable[index];
-            student->layer = layer;      // Store the layer
-            student->class_id = class_id;   // Store the class
-            strcpy(student->telephone, telephone);  // Store the telephone number
-            for (int i = 0; i < 10; i++) {
-                student->grades[i] = grades[i];  // Store grades in the grades array
-            }
         } else {
             fprintf(stderr, "Failed to parse line: %s", line);
+        }
+    }
+
+    fclose(file);
+}
+
+
+// Function to export data from the database to a file
+void export_data_to_file(const char *filename) {
+    FILE *file = fopen(filename, "w");
+    if (file == NULL) {
+        perror("Error opening file for writing");
+        return;
+    }
+
+    // Iterate through the hash table
+    for (int i = 0; i < HASH_TABLE_SIZE; i++) {
+        Student *student = hashTable[i];
+        while (student != NULL) {
+            // Export each student's data in the same format as the input
+            fprintf(file, "%s %s %s %d %d",
+                    student->first_name, student->last_name, student->telephone,
+                    student->layer, student->class_id);
+            for (int j = 0; j < MAX_SUBJECTS; j++) {
+                fprintf(file, " %d", student->grades[j]);
+            }
+            fprintf(file, "\n");
+            student = student->next;
         }
     }
 
