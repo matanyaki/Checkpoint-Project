@@ -16,15 +16,15 @@ void print_first_five_students() {
     }
 }
 
-int main() {
-    // Load data from file
-    const char *filename = "students_with_class.txt";
-    load_data_from_file(filename);
-    
-    // Print the first 5 students
-    printf("Printing the first 5 students:\n");
-    print_first_five_students();
-    
-    export_data_to_file("newdbfile.txt");
-    return 0;
-}
+//int main() {
+//    // Load data from file
+//    const char *filename = "students_with_class.txt";
+//    load_data_from_file(filename);
+//
+//    // Print the first 5 students
+//    printf("Printing the first 5 students:\n");
+//    print_first_five_students();
+//
+//    export_data_to_file("newdbfile.txt");
+//    return 0;
+//}

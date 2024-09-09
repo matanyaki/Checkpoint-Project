@@ -5,6 +5,7 @@
 
 #define MAX_NAME_LENGTH 50
 #define MAX_GRADES 10
+#define MAX_TELEPHONE_LENGTH 11
 
 //Const For Main Menu
 #define Insert 1
@@ -114,10 +115,10 @@ void insertStudent()
     int grades[MAX_GRADES] ={0};
 
     // Take required arguments from user
-    printf("Enter First Name (max %d characters): ", MAX_NAME_LENGTH - 1);
+    printf("Enter First Name (max %d characters): ", MAX_NAME_LENGTH);
     scanf("%s" , firstName);
 
-    printf("Enter Last Name (max %d characters): ", MAX_NAME_LENGTH - 1);
+    printf("Enter Last Name (max %d characters): ", MAX_NAME_LENGTH);
     scanf("%s" , lastName);
 
     clearInputBuffer();
@@ -166,10 +167,6 @@ void editStudent()
 {
     char firstName[MAX_NAME_LENGTH];
     char lastName[MAX_NAME_LENGTH];
-    char newFirstName[MAX_NAME_LENGTH], newLastName[MAX_NAME_LENGTH];
-    char* newTelephone;
-    int newClassNumber, newLayerNumber;
-    int newGrades[MAX_GRADES];
     int userInput;
 
     // Input student first and last name to identify
@@ -178,6 +175,18 @@ void editStudent()
 
     printf("Enter Last Name of the Student to Edit: ");
     scanf("%s" , lastName);
+
+    Student* currentStudent = get_student(firstName , lastName);
+    char newFirstName[MAX_NAME_LENGTH];
+    strcpy(newFirstName ,currentStudent->first_name);
+    char newLastName[MAX_NAME_LENGTH];
+    strcpy(newLastName ,currentStudent->last_name);
+    char newTelephone[12];
+    strcpy(newTelephone,currentStudent->telephone);
+    int newClassNumber = currentStudent->class_id;
+    int newLayerNumber = currentStudent->layer;
+    int newGrades[MAX_GRADES];
+    memcpy(newGrades, currentStudent->grades, MAX_GRADES * sizeof(int));
 
     int continueEditing = 1;
     while (continueEditing) {
@@ -196,7 +205,7 @@ void editStudent()
                 clearInputBuffer();
                 break;
             case EDIT_STUDENT_TELEPHONE:
-                newTelephone = getValidTelephone();
+                //newTelephone = getValidTelephone();
                 break;
             case EDIT_CLASS_NUMBER:
                 printf("Enter New Class Number: ");
@@ -226,7 +235,7 @@ void editStudent()
             continueEditing = 0; // Exit the loop if user chooses not to continue
         }
     }
-
+    set_student(firstName , lastName , newFirstName , newLastName , newTelephone ,  newLayerNumber ,newClassNumber ,newGrades);
     printf("Exiting editing mode...\n");
 }
 
@@ -268,7 +277,7 @@ void export()
     const char* fileName;
     printf("Enter file Path to Export: ");
     scanf("%s" , fileName);
-
+    export_data_to_file(fileName);
 }
 
 int main() {
@@ -280,7 +289,7 @@ int main() {
     while (1) {
         displayMenu();
         userInput = getValidInteger();
-  
+
         switch (userInput) {
             case Insert:
                 printf("Option 1 selected: Add a New Student.\n");

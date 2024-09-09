@@ -6,7 +6,7 @@
 
 // Structure to store each student's information
 typedef struct Student {
-    char first_name[50]; 
+    char first_name[50];
     char last_name[50];
     char telephone[11];      // Added telephone field
     int layer;               // Layer field
