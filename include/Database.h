@@ -27,5 +27,6 @@ void print_student(const char *first_name, const char *last_name);
 void find_top_students(int subject_id);
 void calculate_average(int subject_id);
 void load_data_from_file(const char *filename); // New function to load data
+void export_data_to_file(const char *filename);
 
 #endif

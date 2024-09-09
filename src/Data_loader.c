@@ -47,3 +47,31 @@ void load_data_from_file(const char *filename) {
 
     fclose(file);
 }
+
+
+// Function to export data from the database to a file
+void export_data_to_file(const char *filename) {
+    FILE *file = fopen(filename, "w");
+    if (file == NULL) {
+        perror("Error opening file for writing");
+        return;
+    }
+
+    // Iterate through the hash table
+    for (int i = 0; i < HASH_TABLE_SIZE; i++) {
+        Student *student = hashTable[i];
+        while (student != NULL) {
+            // Export each student's data in the same format as the input
+            fprintf(file, "%s %s %s %d %d",
+                    student->first_name, student->last_name, student->telephone,
+                    student->layer, student->class_id);
+            for (int j = 0; j < MAX_SUBJECTS; j++) {
+                fprintf(file, " %d", student->grades[j]);
+            }
+            fprintf(file, "\n");
+            student = student->next;
+        }
+    }
+
+    fclose(file);
+}
