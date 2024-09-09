@@ -275,7 +275,7 @@ void averagePerCourse()
 }
 void export()
 {
-    const char* fileName = NULL;
+    const char* fileName[256];
     printf("Enter file Path to Export: ");
     scanf("%s" , fileName);
     export_data_to_file(fileName);
