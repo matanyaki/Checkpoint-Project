@@ -271,17 +271,18 @@ void averagePerCourse()
         clearInputBuffer();
     }
     clearInputBuffer();
+    calculate_and_print_average_per_layer(course , layer);
 }
 void export()
 {
-    const char* fileName;
+    const char* fileName = NULL;
     printf("Enter file Path to Export: ");
     scanf("%s" , fileName);
     export_data_to_file(fileName);
 }
 
 int main() {
-    const char* fileName = "C:/Users/Asus/CLionProjects/CheckPointProject/checkpoint-team-1-at-heart-16/students_with_class.txt";
+    const char* fileName = "students_with_class.txt";
     load_data_from_file(fileName);
 
     int userInput;

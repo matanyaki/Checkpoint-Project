@@ -28,7 +28,7 @@ int set_student(const char *old_first_name, const char *old_last_name, const cha
     const char *new_last_name, const char *telephone, int layer, int class_id, int grades[MAX_SUBJECTS]);
 void print_student(const char *first_name, const char *last_name);
 void find_top_students(int subject_id);
-void calculate_average(int subject_id); //TODO add layer selection
+void calculate_and_print_average_per_layer(int subject_id, int layer);
 void load_data_from_file(const char *filename); // New function to load data
 void export_data_to_file(const char *filename);
 

@@ -107,22 +107,6 @@ void remove_student(const char *first_name, const char *last_name) {
     free(student);
 }
 
-// Update a student's grade
-void update_grade(const char *first_name, const char *last_name, int subject_id, int grade) {
-    unsigned int index = hash(first_name, last_name);
-    Student *student = hashTable[index];
-
-    while (student != NULL && (strcmp(student->first_name, first_name) != 0 || strcmp(student->last_name, last_name) != 0)) {
-        student = student->next;
-    }
-
-    if (student == NULL) {
-        printf("Student not found!\n");
-        return;
-    }
-
-    student->grades[subject_id] = grade;
-}
 
 // Print details of a student
 void print_student(const char *first_name, const char *last_name) {
@@ -192,15 +176,17 @@ void find_top_students(int subject_id) {
     }
 }
 
-// Calculate average grade for a subject
-void calculate_average(int subject_id) { //TODO change to take in layer as well
+// Calculate average grade for a subject in a specific layer
+void calculate_and_print_average_per_layer(int subject_id, int layer) {
     Student* student;
     int sum = 0, count = 0;
 
+    // Loop through the entire hash table
     for (int i = 0; i < HASH_TABLE_SIZE; i++) {
         student = hashTable[i];
         while (student != NULL) {
-            if (student->grades[subject_id] != -1) {
+            // Check if the student is in the specified layer and has a valid grade
+            if (student->layer == layer && student->grades[subject_id] != -1) {
                 sum += student->grades[subject_id];
                 count++;
             }
@@ -208,10 +194,12 @@ void calculate_average(int subject_id) { //TODO change to take in layer as well
         }
     }
 
+    // If no students found, print a message
     if (count == 0) {
-        printf("No grades available for subject %d.\n", subject_id);
+        printf("No grades available for subject %d in layer %d.\n", subject_id, layer);
         return;
     }
 
-    printf("Average grade for subject %d: %.2f\n", subject_id, (float)sum / count);
+    // Print the calculated average
+    printf("Average grade for subject %d in layer %d: %.2f\n", subject_id, layer, (float)sum / count);
 }
