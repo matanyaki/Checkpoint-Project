@@ -49,10 +49,13 @@ char getValidChar() {
     return input;
 }
 char* getValidTelephone() {
-    static char input[12]; // Buffer for 10 digits plus newline and null terminator
+    static char input[MAX_TELEPHONE_LENGTH]; // Buffer for 10 digits plus null terminator
     while (1) {
         printf("Enter Telephone Number (10 digits): ");
-        fgets(input, sizeof(input), stdin); // Read input including newline
+        if (fgets(input, sizeof(input), stdin) == NULL) {
+            printf("Error reading input. Please try again.\n");
+            continue; // Retry if input reading fails
+        }
 
         // Remove newline character from input if present
         input[strcspn(input, "\n")] = '\0';
@@ -97,9 +100,9 @@ void displayEditingMenu()
     printf("\nEditing Menu:\n");
     printf("1. Edit First Name\n");
     printf("2. Edit Last Name\n");
-    printf("3. Edit Student ID\n");
-    printf("4. Edit Class Number\n");
-    printf("5. Edit Layer Number\n");
+    printf("3. Edit Student Phone Number\n");
+    printf("4. Edit Layer Number\n");
+    printf("5. Edit Class Number\n");
     printf("6. Edit Grades\n");
     printf("7. Return to Main Menu\n");
     printf("Please select an option (1-6): ");
@@ -109,7 +112,7 @@ void insertStudent()
 {
     char firstName[MAX_NAME_LENGTH];
     char lastName[MAX_NAME_LENGTH];
-    char* telephone;
+    char telephone[MAX_TELEPHONE_LENGTH];
     int studentClass = -1;
     int studentLayer = -1;
     int grades[MAX_GRADES] ={0};
@@ -122,7 +125,8 @@ void insertStudent()
     scanf("%s" , lastName);
 
     clearInputBuffer();
-    telephone = getValidTelephone();
+    strncpy(telephone, getValidTelephone(), MAX_TELEPHONE_LENGTH - 1);
+    telephone[MAX_TELEPHONE_LENGTH - 1] = '\0';
 
     printf("Enter Class Number: ");
     studentClass = getValidInteger();
@@ -181,7 +185,7 @@ void editStudent()
     strcpy(newFirstName ,currentStudent->first_name);
     char newLastName[MAX_NAME_LENGTH];
     strcpy(newLastName ,currentStudent->last_name);
-    char newTelephone[12];
+    char newTelephone[MAX_TELEPHONE_LENGTH];
     strcpy(newTelephone,currentStudent->telephone);
     int newClassNumber = currentStudent->class_id;
     int newLayerNumber = currentStudent->layer;
@@ -205,7 +209,8 @@ void editStudent()
                 clearInputBuffer();
                 break;
             case EDIT_STUDENT_TELEPHONE:
-                //newTelephone = getValidTelephone();
+                strncpy(newTelephone, getValidTelephone(), MAX_TELEPHONE_LENGTH - 1);
+                newTelephone[MAX_TELEPHONE_LENGTH - 1] = '\0';
                 break;
             case EDIT_CLASS_NUMBER:
                 printf("Enter New Class Number: ");
